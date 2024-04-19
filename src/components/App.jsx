@@ -38,7 +38,21 @@ export const App = () => {
         completed = true;
         const allMessages = await openai.beta.threads.messages.list(threadId);
         setMainMessage(allMessages);
-
+      } else if (lastRun.status === 'requires_action') {
+        console.log(lastRun.required_action.submit_tool_outputs.tool_calls[0].id)
+        
+        const toolCalls = lastRun.required_action.submit_tool_outputs.tool_calls;
+        const toolOutputs = toolCalls.map(toolCall => ({
+          output: "true",
+          tool_call_id: toolCall.id,
+        }));
+        
+        const run = await openai.beta.threads.runs.submitToolOutputs(
+          threadId,
+          runId,
+          { tool_outputs: toolOutputs }
+        );
+        console.log('Ya tut zastyal');
       } else {
         console.log('Запуск еще не завершен.');
         // Ждем некоторое время перед повторной проверкой статуса
@@ -48,23 +62,20 @@ export const App = () => {
   };
 
   const textToAssistant = async () => {
-    const thread = await openai.beta.threads.create();
-    console.log(thread);
-    const messages = await openai.beta.threads.messages.create(thread.id, {
-      role: 'user',
-      content: transcription,
-    });
-    const run = await openai.beta.threads.runs.create(thread.id, {
+
+    const run = await openai.beta.threads.createAndRun({
       assistant_id: mainAssistant.id,
+      thread: {
+        messages: [
+          { role: "user", content: transcription },
+        ],
+      },
     });
-
-    await checkRunStatus(thread.id, run.id);
-
     console.log(run);
 
-    // const lastRun = await openai.beta.threads.runs.retrieve(thread.id, run.id);
+    await checkRunStatus(run.thread_id, run.id);
 
-    // console.log(lastRun);
+
   };
 
   const handleFileChange = async event => {
@@ -100,7 +111,7 @@ export const App = () => {
       <button onClick={() => handleFileChange()}>transcriptions</button>
       {transcription && <p>{transcription}</p>}
       <button onClick={() => textToAssistant()}>analis</button>
-      {mainMessage && <p>{mainMessage?.data[1]?.content[0]?.text?.value}</p>}
+      {mainMessage && <p>{mainMessage?.data[0]?.content[0]?.text?.value}</p>}
     </div>
   );
 };
