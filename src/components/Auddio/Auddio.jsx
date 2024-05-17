@@ -21,12 +21,7 @@ export const Auddio = () => {
 
   useEffect(() => {
     assistant();
-    console.log(mainAssistant);
   }, []);
-
-  useEffect(() => {
-    console.log(mainMessage);
-  }, [mainMessage]);
 
   const checkRunStatus = async (threadId, runId) => {
     let completed = false;
