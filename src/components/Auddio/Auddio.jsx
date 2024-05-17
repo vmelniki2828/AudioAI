@@ -47,7 +47,7 @@ export const Auddio = () => {
           tool_call_id: toolCall.id,
         }));
         
-        const run = await openai.beta.threads.runs.submitToolOutputs(
+        await openai.beta.threads.runs.submitToolOutputs(
           threadId,
           runId,
           { tool_outputs: toolOutputs }
@@ -82,15 +82,16 @@ export const Auddio = () => {
     const transcription = await openai.audio.transcriptions.create({
       file,
       model: 'whisper-1',
+      response_format: "srt",
+      prompt:"Тебе приходит диалог, раздели его `-` по репликам."
     });
-    setTranscription(transcription.text);
-    console.log(transcription.text);
+    setTranscription(transcription);
+    console.log(transcription);
   };
 
   return (
     <div
       style={{
-        height: '100vh',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
